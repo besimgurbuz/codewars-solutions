@@ -100,7 +100,7 @@ const comp = (a1, a2) => {
 ### Replace With Alphabet Position
 
 ```python
-  def alphabet_position(text):
+ def alphabet_position(text):
   result = ''
   for letter in text:
     pos = ord(letter.upper()) - 64
