@@ -1,60 +1,80 @@
-const ignoredWords = ["the", "of", "in", "from", "by", "with", "and", "or", "for", "to", "at", "a"];
 
-function generateBC(url, separator) {
-  let urlArray = url.split('/');
+/**
+ *
+ * @param {String} url
+ * @param {String} seperator
+ */
+function generateBC(url, seperator) {
+  const paths = prepPaths(url);
+  const result = ['<a href="/">HOME</a>'];
 
-  urlArray.shift();
-  urlArray = urlArray.filter(text => !text.includes('index'));
-  urlArray = urlArray.map(text => {
-    if (text.includes('?') || text.includes('#')) {
-      const index = text.indexOf('?') > -1 ? text.indexOf('?') : text.indexOf('#');
-      text = text.slice(0, index);
-    }
-    if (text.includes('.')) {
-      const index = text.indexOf('.');
-      text = text.slice(0, index);
-    }
-    return text;
-  });
-
-  let result = `<a href="/">HOME</a> ${separator} `;;
-
-  for (let i = 0; i < urlArray.length; i++) {
-    if (i != urlArray.length - 1) {
-      result += `<a href="${printPath(urlArray, i)}/">${similizeText(urlArray[i].toUpperCase())}</a>`;
-      result += ` ${separator} `
-    } else {
-      result += `<span class="active">${similizeText(urlArray[i].toUpperCase())}</span>`
-    }
+  if (paths.length === 0
+    || (paths.length === 1 && paths[0].startsWith('index.'))
+    || (paths.length === 1 && paths[0].length === 0)) {
+    result[0] = '<span class="active">HOME</span>';
+    return result.join(seperator);
   }
-  return result;
-}
 
-function printPath(arr, index) {
-  let result = '';
-  for (let i = 0; i <= index; i++) {
-    result += `/${arr[i]}`
-  }
-  return result;
-}
-
-function similizeText(text) {
-  if (text.length > 30 && text.split('-').length > 0) {
-    let longWordArr = text.split('-');
-    let res = '';
-    longWordArr.forEach(word => {
-      if (!ignoredWords.includes(word)) {
-        res += word.charAt(0).toUpperCase();
+  let curPath = '/';
+  for (let i = 0; i < paths.length; ++i) {
+    if (paths[i].startsWith('index.')) continue;
+    if (i === paths.length - 1 || paths[i + 1].startsWith('index.')) {
+      // put span
+      if (paths[i].includes('.')) {
+        paths[i] = paths[i].slice(0, paths[i].indexOf('.'));
       }
-    });
-    return res;
-  } else {
-    return text;
+      result.push(`<span class="active">${strShorter(paths[i])}</span>`);
+    } else {
+      // put a
+      result.push(`<a href="${curPath}${paths[i]}/">${strShorter(paths[i])}</a>`);
+    }
+    curPath = `${curPath}${paths[i]}/`;
   }
+  return result.join(seperator);
 }
 
-console.log(generateBC("mysite.com/pictures/holidays.html", " : "));
-console.log(generateBC("www.codewars.com/users/GiacomoSorbi", " / "));
-console.log(generateBC("www.microsoft.com/important/confidential/docs/index.htm#top", " * "));
-console.log(generateBC("mysite.com/very-long-url-to-make-a-silly-yet-meaningful-example/example.asp", " > "));
-console.log(generateBC("www.very-long-site_name-to-make-a-silly-yet-meaningful-example.com/users/giacomo-sorbi", " + "));
+/**
+ *
+ * @param {String} url
+ */
+function prepPaths(url) {
+  if (url.startsWith('https://') || url.startsWith('http://')) {
+    const end = url.indexOf('//');
+    url = url.slice(end + 2, url.length);
+    console.log(url);
+  }
+
+  const paths = url.split('/');
+  paths.shift();
+
+  console.log('BEFORE ' + paths);
+  for (let i = 0; i < paths.length; ++i) {
+    let path = paths[i];
+
+    if (path.includes('#')) {
+      path = path.slice(0, path.indexOf('#'));
+    }
+    if (path.includes('?')) {
+      path = path.slice(0, path.indexOf('?'));
+    }
+    paths[i] = path;
+  }
+  console.log('NEW ' + paths);
+  return paths;
+}
+
+/**
+ *
+ * @param {String} str
+ */
+function strShorter(str) {
+  const ignore = ["the", "of", "in", "from", "by", "with", "and", "or", "for", "to", "at", "a"];
+  const words = str.split('-');
+
+  if (str.length > 30) return words.filter(word => !(ignore.includes(word))).map(word => word[0].toUpperCase()).join('');
+  return words.join(' ').toUpperCase().trim();
+}
+
+console.log(generateBC('linkedin.it/bioengineering-by-for-research/app/users?order=desc&filter=adult', ' . '));
+console.log(generateBC('facebook.fr/the-at-insider-bed-skin-surfer/biotechnology-paper-and-kamehameha/index.php#people', ' ; '));
+console.log(generateBC('github.com/app/games/research-with-the-transmutation-by-at-or-in-a-with#offers?hack=off', ' ; '))
